@@ -2,7 +2,7 @@ from __future__ import annotations
 import pygame
 from enum import Enum, auto
 from typing import List, Tuple
-
+from collections import deque
 Cell = Tuple[int, int]
 
 class Tile(Enum):
@@ -90,8 +90,47 @@ class World:
 
     def rebuild_boundary(self) -> None:
         pass
-
     def seal_area(self, qix_cell: Cell, trail: List[Cell]) -> None:
+        if not self.in_bounds(qix_cell):
+            self._trail_to_boundary()
+            trail.clear()
+            return
+
+        qx, qy = qix_cell
+        if self.grid[qy][qx] is not Tile.FREE:
+            self._trail_to_boundary()
+            trail.clear()
+            self.rebuild_boundary()
+            self._recount_claimed()
+            return
+
+        reach = [[False]*self.width_tiles for _ in range(self.height_tiles)]
+        q = deque([qix_cell])
+        reach[qy][qx] = True
+        while q:
+            x, y = q.popleft()
+            for nx, ny in self._n4(x, y):
+                if not reach[ny][nx] and self.grid[ny][nx] is Tile.FREE:
+                    reach[ny][nx] = True
+                    q.append((nx, ny))
+
+        for y in range(self.height_tiles):
+            for x in range(self.width_tiles):
+                if self.grid[y][x] is Tile.FREE and not reach[y][x]:
+                    self.grid[y][x] = Tile.CLAIMED
+
         self._trail_to_boundary()
         trail.clear()
+        self.rebuild_boundary()
+        self._recount_claimed()
+def _n4(self, x: int, y: int):
+        if x > 0: yield (x - 1, y)
+        if x < self.width_tiles - 1: yield (x + 1, y)
+        if y > 0: yield (x, y - 1)
+        if y < self.height_tiles - 1: yield (x, y + 1)
 
+    def _recount_claimed(self) -> None:
+        self._claimed_tiles = sum(
+            1 for y in range(self.height_tiles) for x in range(self.width_tiles)
+            if self.grid[y][x] is Tile.CLAIMED
+        )
