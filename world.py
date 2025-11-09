@@ -77,4 +77,21 @@ class World:
 
     def qix_hits_trail(self, qix_cell: Cell, trail: List[Cell]) -> bool:
         return self.in_bounds(qix_cell) and (qix_cell in set(trail))
+    def _trail_to_boundary(self) -> None:
+        for y in range(self.height_tiles):
+            for x in range(self.width_tiles):
+                if self.grid[y][x] is Tile.TRAIL:
+                    self.grid[y][x] = Tile.BOUNDARY
+
+    def percent_claimed(self) -> float:
+        if self._total_tiles == 0:
+            return 0.0
+        return (self._claimed_tiles / self._total_tiles) * 100.0
+
+    def rebuild_boundary(self) -> None:
+        pass
+
+    def seal_area(self, qix_cell: Cell, trail: List[Cell]) -> None:
+        self._trail_to_boundary()
+        trail.clear()
 
