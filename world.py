@@ -52,4 +52,29 @@ class World:
                 pygame.draw.line(surf, self.color_grid, (x * ts, 0), (x * ts, self.height_tiles * ts))
             for y in range(self.height_tiles + 1):
                 pygame.draw.line(surf, self.color_grid, (0, y * ts), (self.width_tiles * ts, y * ts))
+    def in_bounds(self, c: Cell) -> bool:
+        x, y = c
+        return 0 <= x < self.width_tiles and 0 <= y < self.height_tiles
+
+    def get(self, c: Cell) -> Tile:
+        x, y = c
+        return self.grid[y][x]
+
+    def set(self, c: Cell, val: Tile) -> None:
+        x, y = c
+        self.grid[y][x] = val
+
+    def reset_push(self) -> None:
+        for y in range(self.height_tiles):
+            for x in range(self.width_tiles):
+                if self.grid[y][x] is Tile.TRAIL:
+                    self.grid[y][x] = Tile.FREE
+
+    def apply_trail(self, trail: List[Cell]) -> None:
+        for c in trail:
+            if self.in_bounds(c) and self.get(c) is Tile.FREE:
+                self.set(c, Tile.TRAIL)
+
+    def qix_hits_trail(self, qix_cell: Cell, trail: List[Cell]) -> bool:
+        return self.in_bounds(qix_cell) and (qix_cell in set(trail))
 
