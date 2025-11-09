@@ -7,7 +7,7 @@ The game starts with a large empty playfield and the player is located on the ou
 3. Sepehr Asadirad ()
 4. Abdureshid Bakri ()
 5. Shafay Chugthai (501226052)
-6. Amir Mokhber ()
+6. Amir Mokhber (501031264)
 
 ## Application Features
 
