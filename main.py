@@ -94,14 +94,30 @@ def update(self, dt):
   self.player.update(dt, self.world)
   self.qix.update(dt, self.world)
   self.sparx.update(dt, self.world)
-
-  #resolve collsions & rules 
+  
   if self.player.is_pushing and self.world.qix_hits_trail(self.qix.cell, self.player.trail):
     self._lose_life(cancel_push=True)
     return 
 
-  if self.sparx.any_hits_trai
+  if self.sparx.any_hits_player(self.player.cell):
+    self._lose_life(cancel_push=False)
+    return
 
+if self.plsyer.is_pushing and self.sparx.hits_push_start(self.player.push_start_cell):
+  self._cancel_push_only()
+  return
+
+if self.player.is_pushing and self._trail_reached_edge():
+  trail = list(self.player.trail)
+  self.player.stop_push()
+
+  self.world.apply_trail_as_edge(trail)
+  self.world.seal_area(self.qix.cell, trail)
+  self.world.rebuild_boundry()
+
+if self.world.claimed_percent() >= self.cfg.target_percent:
+  self.phase = Phase.LEVEL_WON
+  
 
 
 
