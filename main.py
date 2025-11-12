@@ -49,6 +49,59 @@ class world:
   def qix_hits_trail(self, qix_cell, trail) -> bool: ... 
   def rebuild_boundry(self): ... 
     
+###########game state
+
+class Phase(Enum):
+  PLAYING = auto()
+  LIVES_LOST = auto()
+  LEVELS_WON = auto()
+  GAME_OVER = auto()
+
+@dataclass
+class Config:
+  width = 900
+  height = 700
+  fps = 60
+  targest_percent = 0.50
+  lives = 3
+
+class Game:
+  def __init__(self, world: World, player: Player, qix: Qix, sparx: SparxManager, cfg: Config):
+    self.world = world 
+    self.player = player
+    self.qix = qix 
+    self.sparx = sparx
+    self.cfg = cfg
+    self.phase = phase.PLAYING
+    self.lives = cfg.lives
+
+def handle_input(self, events):
+  if self.phase != Phase.PLAYING:
+    for x in events:
+      if x.type == pygame.KEYDOWN and x.key == pygame.K_SPACE:
+        if self.phase == Phase.LIFE_LOST:
+          self.phase = Phase.PLAYING
+        elif self.phase == Phase.LEVEL_WON:
+          self.phase = Phase.PLAYING 
+    return
+  self.player.handle_inputs(events)
+
+def update(self, dt):
+  if self.phase != Phase.PLAYING:
+    return
+
+  # update entities 
+  self.player.update(dt, self.world)
+  self.qix.update(dt, self.world)
+  self.sparx.update(dt, self.world)
+
+  #resolve collsions & rules 
+  if self.player.is_pushing and self.world.qix_hits_trail(self.qix.cell, self.player.trail):
+    self._lose_life(cancel_push=True)
+    return 
+
+  if self.sparx.any_hits_trai
+
 
 
 
