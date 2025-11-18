@@ -107,12 +107,6 @@ class World:
             return False
         local_x, local_y = self._to_local_coords(x, y)
         return bool(self.claimed_grid[local_y][local_x])
-
-    def is_edge_walkable(self, x, y):
-        if not self.is_point_on_edge(x, y):
-            return False
-        lx, ly = self._to_local_coords(x, y)
-        return not self.blocked_grid[ly][lx]
     
     def start_incursion(self, x, y):
         snapped = self.snap_to_edge(x, y)

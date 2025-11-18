@@ -1,3 +1,68 @@
+import sys
+
+TEST_MODE = "--test" in sys.argv
+
+try:
+    import pygame  # noqa: F401
+except ModuleNotFoundError:
+    if TEST_MODE:
+        import types
+
+        class _Vector2:
+            def __init__(self, x=0, y=0):
+                self.x = x
+                self.y = y
+            def rotate_rad(self, angle):
+                return _Vector2(self.x, self.y)
+
+        class _Surface:
+            def __init__(self, *args, **kwargs):
+                pass
+            def fill(self, *args, **kwargs):
+                pass
+            def blit(self, *args, **kwargs):
+                pass
+            def set_alpha(self, *args, **kwargs):
+                pass
+
+        def _rect_factory(*args, **kwargs):
+            class _Rect:
+                def __init__(self, *args, **kwargs):
+                    pass
+                def collidepoint(self, *args, **kwargs):
+                    return False
+            return _Rect()
+
+        pygame = types.SimpleNamespace(
+            init=lambda: None,
+            quit=lambda: None,
+            time=types.SimpleNamespace(get_ticks=lambda: 0),
+            display=types.SimpleNamespace(set_mode=lambda *args, **kwargs: _Surface(), set_caption=lambda *args, **kwargs: None),
+            Surface=_Surface,
+            SRCALPHA=0,
+            font=types.SimpleNamespace(Font=lambda *args, **kwargs: type("F", (), {"render": lambda *a, **k: None})()),
+            draw=types.SimpleNamespace(circle=lambda *a, **k: None,
+                                       polygon=lambda *a, **k: None,
+                                       rect=lambda *a, **k: None,
+                                       lines=lambda *a, **k: None,
+                                       line=lambda *a, **k: None),
+            event=types.SimpleNamespace(get=lambda: []),
+            key=types.SimpleNamespace(get_pressed=lambda: []),
+            K_LEFT=0,
+            K_RIGHT=0,
+            K_UP=0,
+            K_DOWN=0,
+            K_SPACE=0,
+            K_RETURN=0,
+            K_ESCAPE=0,
+            QUIT=0,
+            math=types.SimpleNamespace(Vector2=_Vector2),
+            Rect=_rect_factory
+        )
+        sys.modules["pygame"] = pygame
+    else:
+        raise
+
 from main_header import *
 import random
 
@@ -136,6 +201,8 @@ class Game:
                         self.player.reset_position()
                     break
         
+        self.player.check_push_idle()
+        
         if not self.player.is_alive():
             self.game_state = "GAME_OVER"
         
@@ -258,6 +325,57 @@ class Game:
         
         pygame.quit()
 
+def run_tests():
+    def new_player():
+        world = World(0, 0, 100, 100)
+        player = Player(world.x, world.y, world)
+        player.x = world.x
+        player.y = world.y
+        player.last_edge_pos = (player.x, player.y)
+        world.start_incursion(player.x, player.y)
+        player.is_pushing = True
+        player.push_start_pos = (player.x, player.y)
+        player.last_push_move_time = 0
+        return player
+    
+    # First move must leave the edge
+    player = new_player()
+    assert not player.move(1, 0), "Cannot move along edge while in incursion"
+    assert player.move(0, 1), "Should be able to enter the field"
+
+    # Backtracking blocked on single axis
+    player = new_player()
+    assert player.move(0, 1)
+    initial = player.get_position()
+    assert not player.move(0, -1)
+    assert player.get_position() == initial
+    assert player.move(1, 0)
+    after_turn = player.get_position()
+    assert not player.move(-1, 0)
+    assert player.get_position() == after_turn
+    assert player.move(0, 1)
+    
+    # Turning unlocks new axis while blocking opposite
+    player = new_player()
+    assert player.move(0, 1)
+    assert player.move(1, 0)
+    assert not player.move(-1, 0)
+    assert player.move(0, -1)
+    
+    # Idle timeout costs a life and cancels push
+    player = new_player()
+    player.lives = 3
+    player.check_push_idle(current_time=1600)
+    assert player.lives == 2
+    assert not player.is_pushing
+    assert player.get_position() == player.last_edge_pos
+    
+    print("All gameplay tests passed.")
+
 if __name__ == "__main__":
-    game = Game()
-    game.run()
+    import sys
+    if len(sys.argv) > 1 and sys.argv[1] == "--test":
+        run_tests()
+    else:
+        game = Game()
+        game.run()

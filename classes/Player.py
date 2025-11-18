@@ -18,7 +18,7 @@ class Player:
         self.last_edge_pos = (x, y)
         self.push_dir = None
         self.last_push_move_time = 0
-        self.push_idle_timeout = 3000
+        self.push_idle_timeout = 1500
         self.push_warning_delay = 0
         self.edge_axis = self._detect_edge_axis(x, y, default="horizontal")
 
@@ -49,7 +49,10 @@ class Player:
                 self.complete_incursion(qix_pos)
                 return True
             elif self._can_extend_incursion_trace(new_x, new_y):
-                if self.world.check_incursion_collision(new_x, new_y, threshold=self.speed + 1, skip_tail_segments=1):
+                if self.world.check_incursion_collision(
+                    new_x, new_y, threshold=self.speed + 1, skip_tail_segments=1
+                ):
+                    self._fail_current_incursion()
                     return False
                 if not self._validate_push_direction(move_dir):
                     return False
@@ -174,16 +177,7 @@ class Player:
         self.world.set_incursion_warning(False)
     
     def _handle_idle_failure(self):
-        start_pos = self.world.cancel_incursion()
-        if start_pos:
-            self.last_edge_pos = start_pos
-        self.is_pushing = False
-        self.push_start_pos = None
-        self.push_dir = None
-        self.world.set_incursion_warning(False)
-        self.x, self.y = self.last_edge_pos
-        self._update_edge_axis_from_position(self.x, self.y)
-        self.lose_life()
+        self._fail_current_incursion()
     
     def _normalize_direction(self, dx, dy):
         if dx != 0:
@@ -236,4 +230,16 @@ class Player:
             return False
         last_x, last_y = self.world.current_incursion[-1]
         return abs(x - last_x) < 10 and abs(y - last_y) < 10
+
+    def _fail_current_incursion(self):
+        start_pos = self.world.cancel_incursion()
+        if start_pos:
+            self.last_edge_pos = start_pos
+        self.is_pushing = False
+        self.push_start_pos = None
+        self.push_dir = None
+        self.world.set_incursion_warning(False)
+        self.x, self.y = self.last_edge_pos
+        self._update_edge_axis_from_position(self.x, self.y)
+        self.lose_life()
     
