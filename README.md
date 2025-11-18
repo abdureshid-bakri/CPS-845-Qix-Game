@@ -5,7 +5,7 @@ The game starts with a large empty playfield and the player is located on the ou
 1. Khadija Abbas (501186956)
 2. Samiya Abdirahim ()
 3. Sepehr Asadirad ()
-4. Abdureshid Bakri ()
+4. Abdureshid Bakri (500917041)
 5. Shafay Chugthai (501226052)
 6. Amir Mokhber (501031264)
 
